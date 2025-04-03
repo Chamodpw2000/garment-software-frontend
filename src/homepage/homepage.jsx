@@ -10,7 +10,6 @@ const HomePage = () => {
     { name: 'Large', quantity: 300 },
     { name: 'XL', quantity: 150 }
   ]);
-
   const [maxBlocksPerCut, setMaxBlocksPerCut] = useState(0);
   const [maxStackingCloth, setMaxStackingCloth] = useState(0);
   const [result, setResult] = useState(null);
@@ -67,7 +66,6 @@ const HomePage = () => {
       toast.error("Please enter a valid maximum stacking cloth.");
       return true;
     }
-
     return false;
   }
 
@@ -75,7 +73,7 @@ const HomePage = () => {
     if (checkForErrors()) {
       return; // Stop execution if there are errors
     }
-  
+    
     setLoading(true);
     const orders = getSizesObject();
     const formData = {
@@ -83,11 +81,9 @@ const HomePage = () => {
       maxBlocksPerCut,
       maxStackingCloth,
     };
-
     console.log('Form data:', formData);
     
-  
-    axios.post('http://localhost:3000/api/orders/optimize-cutting', formData)
+    axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/orders/optimize-cutting`, formData)
       .then((response) => {
         console.log('Optimization response:', response.data);
         // Process the data to include remaining counts (which the backend doesn't provide)
@@ -153,11 +149,9 @@ const HomePage = () => {
             </button>
           </nav>
         </div>
-
         {activeTab === 'input' ? (
           <div className="p-4">
             <h1 className="text-xl font-semibold text-gray-800 mb-4">Garment Cutting Optimizer</h1>
-
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-md font-medium text-gray-700">Size Orders</h2>
@@ -168,7 +162,6 @@ const HomePage = () => {
                   Add Size
                 </button>
               </div>
-
               <div className="overflow-x-auto bg-gray-50 rounded-md">
                 <table className="min-w-full divide-y divide-gray-100">
                   <thead>
@@ -212,7 +205,6 @@ const HomePage = () => {
                 </table>
               </div>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 bg-blue-50 p-3 rounded-md">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">
@@ -228,7 +220,6 @@ const HomePage = () => {
                   Max blocks that can be cut at once
                 </p>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">
                   Maximum Stacking Cloth
@@ -244,7 +235,6 @@ const HomePage = () => {
                 </p>
               </div>
             </div>
-
             <div className="flex justify-end">
               <button
                 onClick={optimizeCutting}
@@ -260,10 +250,9 @@ const HomePage = () => {
             {result && (
               <div>
                 <h1 className="text-xl font-semibold text-gray-800 mb-4">Optimization Results</h1>
-
                 <div className="bg-blue-50 p-3 rounded-md mb-4">
                   <h2 className="text-md font-medium text-gray-700 mb-3">Summary</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                     <div className="bg-white p-3 rounded-md shadow-sm">
                       <p className="text-xs text-gray-500">Total Orders</p>
                       <p className="text-lg font-bold text-gray-800">{result.totalOrderQuantity}</p>
@@ -280,9 +269,35 @@ const HomePage = () => {
                       <p className="text-xs text-gray-500">Stack Utilization</p>
                       <p className="text-lg font-bold text-green-600">{result.stackUtilizationPercent}%</p>
                     </div>
+                    <div className="bg-white p-3 rounded-md shadow-sm">
+                      <p className="text-xs text-gray-500">Cloth Efficiency</p>
+                      <p className="text-lg font-bold text-green-600">{result.clothEfficiencyPercent || 100}%</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-md shadow-sm">
+                      <p className="text-xs text-gray-500">Total Waste</p>
+                      <p className="text-lg font-bold text-red-500">{result.totalWaste || 0}</p>
+                    </div>
                   </div>
                 </div>
-
+                
+                {/* Waste Analysis Section */}
+                {result.totalWaste > 0 && (
+                  <div className="mb-4 bg-red-50 p-3 rounded-md">
+                    <h2 className="text-md font-medium text-gray-700 mb-2">Waste Analysis</h2>
+                    <p className="text-sm text-gray-600 mb-2">
+                      The current cutting plan produces {result.totalWaste} extra pieces that exceed the ordered quantities.
+                      This represents {((result.totalWaste / result.totalOrderQuantity) * 100).toFixed(2)}% of the total order.
+                    </p>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div 
+                        className="bg-red-500 h-2.5 rounded-full" 
+                        style={{ width: `${result.clothEfficiencyPercent || 100}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Cloth Efficiency: {result.clothEfficiencyPercent || 100}%</p>
+                  </div>
+                )}
+                
                 <div className="mb-4">
                   <h2 className="text-md font-medium text-gray-700 mb-3">Size Summary</h2>
                   <div className="overflow-x-auto mb-4">
@@ -313,7 +328,6 @@ const HomePage = () => {
                       </tbody>
                     </table>
                   </div>
-
                   <h2 className="text-md font-medium text-gray-700 mb-3">Cutting Plan</h2>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-100">
@@ -322,6 +336,7 @@ const HomePage = () => {
                           <th className="px-3 py-2 bg-gray-100 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cut #</th>
                           <th className="px-3 py-2 bg-gray-100 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stack</th>
                           <th className="px-3 py-2 bg-gray-100 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Blocks</th>
+                          <th className="px-3 py-2 bg-gray-100 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Production</th>
                           <th className="px-3 py-2 bg-gray-100 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remaining</th>
                         </tr>
                       </thead>
@@ -341,6 +356,15 @@ const HomePage = () => {
                             </td>
                             <td className="px-3 py-2">
                               <div className="flex flex-wrap gap-1">
+                                {Object.entries(cut.blocks).map(([size, count]) => (
+                                  <span key={size} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                    {size}: {count * cut.stackSize}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2">
+                              <div className="flex flex-wrap gap-1">
                                 {cut.remainingAfterCut && Object.entries(cut.remainingAfterCut).map(([size, count]) => (
                                   <span key={size} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
                                     {size}: {count}
@@ -354,7 +378,79 @@ const HomePage = () => {
                     </table>
                   </div>
                 </div>
-
+                
+                {/* Cloth Utilization Visualization */}
+                <div className="mb-6 bg-green-50 p-3 rounded-md">
+                  <h2 className="text-md font-medium text-gray-700 mb-2">Cloth Utilization Analysis</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-600 mb-2">Block Utilization</h3>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
+                        <div 
+                          className="bg-blue-500 h-2.5 rounded-full" 
+                          style={{ width: `${result.blockUtilizationPercent}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {result.blockUtilizationPercent}% of available block slots are used
+                      </p>
+                      
+                      <h3 className="text-sm font-medium text-gray-600 mt-4 mb-2">Stack Utilization</h3>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
+                        <div 
+                          className="bg-green-500 h-2.5 rounded-full" 
+                          style={{ width: `${result.stackUtilizationPercent}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {result.stackUtilizationPercent}% of available stacking capacity is used
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-600 mb-2">Cloth Efficiency</h3>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
+                        <div 
+                          className={`${result.clothEfficiencyPercent >= 95 ? 'bg-green-500' : result.clothEfficiencyPercent >= 80 ? 'bg-yellow-500' : 'bg-red-500'} h-2.5 rounded-full`}
+                          style={{ width: `${result.clothEfficiencyPercent || 100}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {result.clothEfficiencyPercent || 100}% of cut cloth is used for ordered garments
+                      </p>
+                      
+                      {result.totalWaste > 0 && (
+                        <div className="mt-4 p-2 bg-red-100 rounded-md">
+                          <h3 className="text-sm font-medium text-red-700 mb-1">Waste Alert</h3>
+                          <p className="text-xs text-red-600">
+                            Current plan produces {result.totalWaste} extra pieces that exceed orders.
+                            Consider adjusting stack sizes to reduce waste.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Optimization Recommendations */}
+                <div className="mb-6 bg-yellow-50 p-3 rounded-md">
+                  <h2 className="text-md font-medium text-gray-700 mb-2">Optimization Recommendations</h2>
+                  <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
+                    {result.blockUtilizationPercent < 90 && (
+                      <li>Consider reducing the maximum blocks per cut to improve block utilization.</li>
+                    )}
+                    {result.stackUtilizationPercent < 90 && (
+                      <li>Consider reducing the maximum stacking cloth to improve stack utilization.</li>
+                    )}
+                    {(result.clothEfficiencyPercent || 100) < 95 && (
+                      <li>Adjust stack sizes to reduce overproduction and improve cloth efficiency.</li>
+                    )}
+                    {result.totalCuts > 1 && result.blockUtilizationPercent < 100 && (
+                      <li>There may be room to consolidate cuts by optimizing block allocation.</li>
+                    )}
+                  </ul>
+                </div>
+                
                 <div className="flex justify-between">
                   <button
                     onClick={() => setActiveTab('input')}
